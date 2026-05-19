@@ -32,3 +32,35 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #52525b; 
 }
+
+/* Sliders del editor espacial */
+.axis-slider {
+  height: 6px;
+  border-radius: 9999px;
+  background: #27272a;
+  cursor: pointer;
+}
+
+.axis-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fafafa;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35);
+  transition: transform 0.15s ease;
+}
+
+.axis-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+.axis-track-x {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.06), transparent);
+}
+.axis-track-y {
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.06), transparent);
+}
+.axis-track-z {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.06), transparent);
+}
