@@ -7,12 +7,12 @@ export const swaggerSpec = {
   },
   servers: [
     {
-      url: process.env.NEXT_PUBLIC_SUPABASE_URL ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1` : 'https://TU-PROYECTO.supabase.co/rest/v1',
+      url: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://TU-PROYECTO.supabase.co',
       description: 'API Principal (Supabase)',
     },
   ],
   paths: {
-    '/models': {
+    '/rest/v1/models': {
       get: {
         summary: 'Obtener todos los modelos 3D',
         description: 'Devuelve un arreglo con todos los entornos y modelos XR disponibles. En Unity, puedes anexar `?select=*` a la URL.',
@@ -100,6 +100,55 @@ export const swaggerSpec = {
         responses: {
           '204': {
             description: 'Modelo actualizado exitosamente'
+          }
+        }
+      }
+    },
+    '/auth/v1/token': {
+      post: {
+        summary: 'Autenticación (Login)',
+        description: 'Endpoint para que Unity inicie sesión con email y contraseña, y así obtener el token de acceso (Bearer token).',
+        tags: ['Autenticación'],
+        parameters: [
+          {
+            name: 'grant_type',
+            in: 'query',
+            description: 'Debe ser siempre "password"',
+            required: true,
+            schema: { type: 'string', default: 'password' }
+          }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email', 'password'],
+                properties: {
+                  email: { type: 'string', format: 'email', example: 'admin@imaxr.com' },
+                  password: { type: 'string', example: 'mi_password_secreto' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'Inicio de sesión exitoso. Devuelve el token.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    access_token: { type: 'string', description: 'Token que usarás en el header Authorization: Bearer <token>' },
+                    token_type: { type: 'string', example: 'bearer' },
+                    expires_in: { type: 'number' },
+                    user: { type: 'object' }
+                  }
+                }
+              }
+            }
           }
         }
       }

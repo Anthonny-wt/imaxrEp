@@ -62,6 +62,10 @@ export function UploadForm() {
         .from('glb_models')
         .getPublicUrl(filePath)
 
+      // Get current user ID to satisfy RLS policies
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) throw new Error('No estás autenticado')
+
       // 3. Insert into Database
       const { error: dbError } = await supabase
         .from('models')
@@ -72,7 +76,8 @@ export function UploadForm() {
             file_url: publicUrl,
             pos_x: 0,
             pos_y: 0,
-            pos_z: 0
+            pos_z: 0,
+            user_id: session.user.id
           }
         ])
 
