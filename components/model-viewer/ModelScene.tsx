@@ -127,7 +127,7 @@ export function PreviewSceneContent({ url }: { url: string }) {
       <fog attach="fog" args={['#0a0a0f', 6, 18]} />
       <StudioLights />
       <Suspense fallback={<SceneLoader compact />}>
-        <Bounds fit clip observe margin={1.35}>
+        <Bounds fit clip margin={1.35}>
           <LoadedModel url={url} />
         </Bounds>
         <ContactShadows

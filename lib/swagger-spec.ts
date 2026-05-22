@@ -1,38 +1,22 @@
 export const swaggerSpec = {
   openapi: '3.0.0',
   info: {
-    title: 'EduXR CMS API (Supabase REST)',
+    title: 'EduXR CMS API',
     version: '1.0.0',
-    description: 'Documentación de los endpoints REST generados automáticamente por Supabase para la plataforma EduXR. **Importante para Unity:** Debes enviar los headers `apikey` y `Authorization: Bearer <token>` en todas las peticiones.',
+    description: 'Documentación de los endpoints REST de la plataforma EduXR (Next.js Proxy API).',
   },
   servers: [
     {
-      url: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://TU-PROYECTO.supabase.co',
-      description: 'API Principal (Supabase)',
+      url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+      description: 'Servidor API',
     },
   ],
   paths: {
-    '/rest/v1/models': {
+    '/api/models': {
       get: {
         summary: 'Obtener todos los modelos 3D',
-        description: 'Devuelve un arreglo con todos los entornos y modelos XR disponibles. En Unity, puedes anexar `?select=*` a la URL.',
-        tags: ['Modelos'],
-        parameters: [
-          {
-            name: 'id',
-            in: 'query',
-            description: 'Filtrar por ID (Ej: `eq.123e4567-e89b-12d3-a456-426614174000`)',
-            required: false,
-            schema: { type: 'string' }
-          },
-          {
-            name: 'select',
-            in: 'query',
-            description: 'Campos a seleccionar (Ej: `*`)',
-            required: false,
-            schema: { type: 'string', default: '*' }
-          }
-        ],
+        description: 'Devuelve un array con todos los entornos y modelos XR disponibles.',
+        tags: ['Models'],
         responses: {
           '200': {
             description: 'Lista de modelos obtenida exitosamente.',
@@ -41,81 +25,95 @@ export const swaggerSpec = {
                 schema: {
                   type: 'array',
                   items: {
-                    $ref: '#/components/schemas/ModelData'
+                    $ref: '#/components/schemas/Model'
                   }
                 }
               }
             }
+          },
+          '500': {
+            description: 'Error interno del servidor.'
           }
         }
       },
       post: {
         summary: 'Crear un nuevo modelo',
-        description: 'Sube un nuevo registro de modelo. Normalmente esto se hace desde el CMS Web, no desde Unity.',
-        tags: ['Modelos'],
+        description: 'Crea un nuevo registro de modelo en la base de datos.',
+        tags: ['Models'],
         requestBody: {
           required: true,
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/ModelDataInput'
+                $ref: '#/components/schemas/ModelInput'
               }
             }
           }
         },
         responses: {
           '201': {
-            description: 'Modelo creado'
-          }
-        }
-      },
-      patch: {
-        summary: 'Actualizar un modelo existente',
-        description: 'Útil si desde Unity necesitas guardar una nueva coordenada para el modelo. Usa el parámetro `id=eq.<id>` en la query string para apuntar al modelo exacto.',
-        tags: ['Modelos'],
-        parameters: [
-          {
-            name: 'id',
-            in: 'query',
-            description: 'ID del modelo a actualizar (Ej: `eq.123e...`)',
-            required: true,
-            schema: { type: 'string' }
-          }
-        ],
-        requestBody: {
-          required: true,
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                properties: {
-                  pos_x: { type: 'number' },
-                  pos_y: { type: 'number' },
-                  pos_z: { type: 'number' }
+            description: 'Modelo creado exitosamente.',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Model'
                 }
               }
             }
-          }
-        },
-        responses: {
-          '204': {
-            description: 'Modelo actualizado exitosamente'
+          },
+          '400': {
+            description: 'Datos inválidos o campos faltantes.'
+          },
+          '500': {
+            description: 'Error interno del servidor.'
           }
         }
       }
     },
-    '/auth/v1/token': {
-      post: {
-        summary: 'Autenticación (Login)',
-        description: 'Endpoint para que Unity inicie sesión con email y contraseña, y así obtener el token de acceso (Bearer token).',
-        tags: ['Autenticación'],
+    '/api/models/{id}': {
+      get: {
+        summary: 'Obtener un modelo por ID',
+        description: 'Devuelve un solo objeto modelo dado su UUID.',
+        tags: ['Models'],
         parameters: [
           {
-            name: 'grant_type',
-            in: 'query',
-            description: 'Debe ser siempre "password"',
+            name: 'id',
+            in: 'path',
+            description: 'UUID del modelo',
             required: true,
-            schema: { type: 'string', default: 'password' }
+            schema: { type: 'string', format: 'uuid' }
+          }
+        ],
+        responses: {
+          '200': {
+            description: 'Modelo encontrado.',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Model'
+                }
+              }
+            }
+          },
+          '404': {
+            description: 'Modelo no encontrado.'
+          },
+          '500': {
+            description: 'Error interno del servidor.'
+          }
+        }
+      },
+      put: {
+        summary: 'Actualizar un modelo',
+        description: 'Actualiza un modelo existente dado su UUID.',
+        tags: ['Models'],
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            description: 'UUID del modelo a actualizar',
+            required: true,
+            schema: { type: 'string', format: 'uuid' }
           }
         ],
         requestBody: {
@@ -123,32 +121,65 @@ export const swaggerSpec = {
           content: {
             'application/json': {
               schema: {
-                type: 'object',
-                required: ['email', 'password'],
-                properties: {
-                  email: { type: 'string', format: 'email', example: 'admin@imaxr.com' },
-                  password: { type: 'string', example: 'mi_password_secreto' }
-                }
+                $ref: '#/components/schemas/ModelInput'
               }
             }
           }
         },
         responses: {
           '200': {
-            description: 'Inicio de sesión exitoso. Devuelve el token.',
+            description: 'Modelo actualizado exitosamente.',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Model'
+                }
+              }
+            }
+          },
+          '400': {
+            description: 'Datos inválidos o campos faltantes.'
+          },
+          '404': {
+            description: 'Modelo no encontrado.'
+          },
+          '500': {
+            description: 'Error interno del servidor.'
+          }
+        }
+      },
+      delete: {
+        summary: 'Eliminar un modelo',
+        description: 'Elimina un modelo y devuelve un mensaje de éxito.',
+        tags: ['Models'],
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            description: 'UUID del modelo a eliminar',
+            required: true,
+            schema: { type: 'string', format: 'uuid' }
+          }
+        ],
+        responses: {
+          '200': {
+            description: 'Modelo eliminado exitosamente.',
             content: {
               'application/json': {
                 schema: {
                   type: 'object',
                   properties: {
-                    access_token: { type: 'string', description: 'Token que usarás en el header Authorization: Bearer <token>' },
-                    token_type: { type: 'string', example: 'bearer' },
-                    expires_in: { type: 'number' },
-                    user: { type: 'object' }
+                    message: { type: 'string' }
                   }
                 }
               }
             }
+          },
+          '404': {
+            description: 'Modelo no encontrado.'
+          },
+          '500': {
+            description: 'Error interno del servidor.'
           }
         }
       }
@@ -156,46 +187,31 @@ export const swaggerSpec = {
   },
   components: {
     schemas: {
-      ModelData: {
+      Model: {
         type: 'object',
         properties: {
           id: { type: 'string', format: 'uuid', example: 'd290f1ee-6c54-4b01-90e6-d701748f0851' },
           space_name: { type: 'string', example: 'Sala de Anatomía' },
-          description: { type: 'string', example: 'Modelo interactivo del corazón humano' },
+          description: { type: 'string', nullable: true, example: 'Modelo interactivo del corazón humano' },
           file_url: { type: 'string', example: 'https://xxx.supabase.co/storage/v1/object/public/glb_models/models/corazon.glb' },
-          pos_x: { type: 'number', example: 1.5 },
-          pos_y: { type: 'number', example: 0.0 },
-          pos_z: { type: 'number', example: -2.5 },
+          pos_x: { type: 'number', format: 'float', example: 1.5 },
+          pos_y: { type: 'number', format: 'float', example: 0.0 },
+          pos_z: { type: 'number', format: 'float', example: -2.5 },
           created_at: { type: 'string', format: 'date-time' }
         }
       },
-      ModelDataInput: {
+      ModelInput: {
         type: 'object',
-        required: ['space_name', 'file_url'],
+        required: ['space_name', 'file_url', 'pos_x', 'pos_y', 'pos_z'],
         properties: {
           space_name: { type: 'string' },
           description: { type: 'string' },
           file_url: { type: 'string' },
-          pos_x: { type: 'number', default: 0 },
-          pos_y: { type: 'number', default: 0 },
-          pos_z: { type: 'number', default: 0 }
+          pos_x: { type: 'number', format: 'float' },
+          pos_y: { type: 'number', format: 'float' },
+          pos_z: { type: 'number', format: 'float' }
         }
       }
-    },
-    securitySchemes: {
-      ApiKeyAuth: {
-        type: 'apiKey',
-        in: 'header',
-        name: 'apikey'
-      },
-      BearerAuth: {
-        type: 'http',
-        scheme: 'bearer'
-      }
     }
-  },
-  security: [
-    { ApiKeyAuth: [] },
-    { BearerAuth: [] }
-  ]
+  }
 }
